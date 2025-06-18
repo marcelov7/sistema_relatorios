@@ -1,0 +1,407 @@
+/* ===================================
+   SISTEMA DE ACESSIBILIDADE
+   =================================== */
+
+/* Variáveis CSS para temas */
+:root {
+    --font-scale: 1;
+    --accessibility-primary: #6f42c1;
+    --accessibility-success: #198754;
+    --accessibility-danger: #dc3545;
+    --accessibility-warning: #ffc107;
+    --accessibility-info: #0dcaf0;
+    --accessibility-secondary: #6c757d;
+}
+
+/* Aplicação do scale de fonte */
+body {
+    font-size: calc(1rem * var(--font-scale));
+}
+
+h1 { font-size: calc(2.5rem * var(--font-scale)); }
+h2 { font-size: calc(2rem * var(--font-scale)); }
+h3 { font-size: calc(1.75rem * var(--font-scale)); }
+h4 { font-size: calc(1.5rem * var(--font-scale)); }
+h5 { font-size: calc(1.25rem * var(--font-scale)); }
+h6 { font-size: calc(1rem * var(--font-scale)); }
+
+.small { font-size: calc(0.875rem * var(--font-scale)); }
+.fs-1 { font-size: calc(2.5rem * var(--font-scale)) !important; }
+.fs-2 { font-size: calc(2rem * var(--font-scale)) !important; }
+.fs-3 { font-size: calc(1.75rem * var(--font-scale)) !important; }
+.fs-4 { font-size: calc(1.5rem * var(--font-scale)) !important; }
+.fs-5 { font-size: calc(1.25rem * var(--font-scale)) !important; }
+.fs-6 { font-size: calc(1rem * var(--font-scale)) !important; }
+
+/* ===================================
+   MODO ESCURO
+   =================================== */
+body.dark-mode {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .bg-light {
+    background-color: #2d2d2d !important;
+}
+
+body.dark-mode .bg-white {
+    background-color: #2d2d2d !important;
+}
+
+body.dark-mode .text-dark {
+    color: #ffffff !important;
+}
+
+body.dark-mode .text-muted {
+    color: #cccccc !important;
+}
+
+body.dark-mode .card {
+    background-color: #2d2d2d !important;
+    border-color: #4a4a4a !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .card-header {
+    background-color: #3a3a3a !important;
+    border-color: #4a4a4a !important;
+}
+
+body.dark-mode .table {
+    --bs-table-bg: #2d2d2d;
+    --bs-table-color: #ffffff;
+    --bs-table-border-color: #4a4a4a;
+    --bs-table-striped-bg: #3a3a3a;
+    --bs-table-hover-bg: #3a3a3a;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #3a3a3a !important;
+    border-color: #4a4a4a !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #3a3a3a !important;
+    border-color: var(--accessibility-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25) !important;
+}
+
+body.dark-mode .btn-outline-primary {
+    color: var(--accessibility-primary);
+    border-color: var(--accessibility-primary);
+}
+
+body.dark-mode .btn-outline-primary:hover {
+    background-color: var(--accessibility-primary);
+    color: white;
+}
+
+body.dark-mode .btn-outline-secondary {
+    color: #cccccc;
+    border-color: #4a4a4a;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #4a4a4a;
+    color: white;
+}
+
+body.dark-mode .navbar-modern {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%) !important;
+}
+
+body.dark-mode .system-footer {
+    background-color: #2d2d2d !important;
+    border-color: #4a4a4a !important;
+}
+
+body.dark-mode .alert-success {
+    background-color: #1e4d2b !important;
+    border-color: #2d7a3e !important;
+    color: #a3d9a5 !important;
+}
+
+body.dark-mode .alert-danger {
+    background-color: #4d1e1e !important;
+    border-color: #7a2d2d !important;
+    color: #d9a3a3 !important;
+}
+
+body.dark-mode .alert-warning {
+    background-color: #4d3d1e !important;
+    border-color: #7a5d2d !important;
+    color: #d9c3a3 !important;
+}
+
+body.dark-mode .alert-info {
+    background-color: #1e3d4d !important;
+    border-color: #2d5d7a !important;
+    color: #a3c3d9 !important;
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #2d2d2d !important;
+    border-color: #4a4a4a !important;
+}
+
+body.dark-mode .dropdown-item {
+    color: #ffffff !important;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #3a3a3a !important;
+}
+
+body.dark-mode .modal-content {
+    background-color: #2d2d2d !important;
+    border-color: #4a4a4a !important;
+}
+
+body.dark-mode .modal-header {
+    border-color: #4a4a4a !important;
+}
+
+body.dark-mode .modal-footer {
+    border-color: #4a4a4a !important;
+}
+
+/* ===================================
+   ALTO CONTRASTE
+   =================================== */
+body.high-contrast {
+    filter: contrast(150%) brightness(110%);
+}
+
+body.high-contrast .btn {
+    border-width: 2px !important;
+    font-weight: bold !important;
+}
+
+body.high-contrast .card {
+    border-width: 2px !important;
+}
+
+body.high-contrast .form-control,
+body.high-contrast .form-select {
+    border-width: 2px !important;
+}
+
+body.high-contrast .table {
+    border-width: 2px !important;
+}
+
+body.high-contrast .table th,
+body.high-contrast .table td {
+    border-width: 2px !important;
+}
+
+/* ===================================
+   REDUÇÃO DE MOVIMENTO
+   =================================== */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+/* ===================================
+   TEMAS DE DALTONISMO
+   =================================== */
+
+/* Protanopia - Deficiência de vermelho */
+body[data-color-theme="protanopia"] {
+    --bs-primary: #0066cc;
+    --bs-success: #0099cc;
+    --bs-danger: #ff6600;
+    --bs-warning: #ffcc00;
+    --bs-info: #0066cc;
+    --bs-secondary: #666666;
+}
+
+/* Deuteranopia - Deficiência de verde */
+body[data-color-theme="deuteranopia"] {
+    --bs-primary: #0066cc;
+    --bs-success: #0099cc;
+    --bs-danger: #cc6600;
+    --bs-warning: #ffcc00;
+    --bs-info: #0066cc;
+    --bs-secondary: #666666;
+}
+
+/* Tritanopia - Deficiência de azul */
+body[data-color-theme="tritanopia"] {
+    --bs-primary: #cc0066;
+    --bs-success: #009900;
+    --bs-danger: #cc0000;
+    --bs-warning: #ff9900;
+    --bs-info: #cc0066;
+    --bs-secondary: #666666;
+}
+
+/* Alto contraste especial */
+body[data-color-theme="high_contrast"] {
+    --bs-primary: #000000;
+    --bs-success: #008000;
+    --bs-danger: #ff0000;
+    --bs-warning: #ff8000;
+    --bs-info: #0000ff;
+    --bs-secondary: #808080;
+}
+
+/* ===================================
+   MELHORIAS DE ACESSIBILIDADE
+   =================================== */
+
+/* Foco visível melhorado */
+*:focus {
+    outline: 3px solid var(--accessibility-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Links com melhor contraste */
+a {
+    text-decoration: underline !important;
+}
+
+a:hover {
+    text-decoration: none !important;
+}
+
+/* Botões com melhor área de clique */
+.btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 1rem;
+}
+
+/* Textos alternativos para ícones */
+.bi::before {
+    speak: none;
+}
+
+/* Melhor contraste para placeholders */
+.form-control::placeholder,
+.form-select::placeholder {
+    opacity: 0.8;
+}
+
+/* Skip links para navegação por teclado */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--accessibility-primary);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 9999;
+    border-radius: 0 0 4px 4px;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Indicadores de status mais claros */
+.badge {
+    font-weight: bold;
+    border: 1px solid currentColor;
+}
+
+/* Melhor contraste para tooltips */
+.tooltip .tooltip-inner {
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+}
+
+/* ===================================
+   RESPONSIVIDADE PARA ACESSIBILIDADE
+   =================================== */
+@media (max-width: 768px) {
+    body {
+        font-size: calc(1.1rem * var(--font-scale));
+    }
+    
+    .btn {
+        min-height: 48px;
+        min-width: 48px;
+    }
+    
+    .form-control,
+    .form-select {
+        min-height: 48px;
+    }
+}
+
+/* ===================================
+   ANIMAÇÕES RESPEITANDO PREFERÊNCIAS
+   =================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme]) {
+        background-color: #1a1a1a;
+        color: #ffffff;
+    }
+}
+
+/* ===================================
+   UTILITÁRIOS DE ACESSIBILIDADE
+   =================================== */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.sr-only-focusable:focus {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    padding: inherit !important;
+    margin: inherit !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+}
+
+/* Indicador de foco para navegação por teclado */
+.focus-indicator {
+    position: relative;
+}
+
+.focus-indicator:focus::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 3px solid var(--accessibility-primary);
+    border-radius: 6px;
+    pointer-events: none;
+} 
