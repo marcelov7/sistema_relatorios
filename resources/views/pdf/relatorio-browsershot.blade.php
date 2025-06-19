@@ -331,6 +331,13 @@
                     $imagemExiste = file_exists($caminhoCompleto);
                     $tamanhoArquivo = $imagemExiste ? filesize($caminhoCompleto) : 0;
                     $tamanhoKB = number_format($tamanhoArquivo / 1024, 2);
+                    
+                    // Converter imagem para base64 para funcionar com Browsershot
+                    $imagemBase64 = null;
+                    if ($imagemExiste && $imagem->isImagem() && $tamanhoArquivo <= 5 * 1024 * 1024) { // Máximo 5MB
+                        $imagemData = file_get_contents($caminhoCompleto);
+                        $imagemBase64 = 'data:' . $imagem->tipo_mime . ';base64,' . base64_encode($imagemData);
+                    }
                 @endphp
                 
                 <div class="image-info">
@@ -340,26 +347,35 @@
                     <div class="label">Descrição:</div>
                     <div>{{ $imagem->descricao }}</div>
                     @endif
+                    <div class="label">Tamanho:</div>
+                    <div>{{ $tamanhoKB }} KB</div>
                 </div>
                 
                 @if(!$imagemExiste)
                     <div class="status-box error">
-                        ❌ Arquivo não encontrado
+                        ❌ Arquivo não encontrado: {{ $imagem->caminho_arquivo }}
                     </div>
                 @elseif(!$imagem->isImagem())
                     <div class="status-box warning">
-                        📎 Arquivo anexado
+                        📎 Arquivo anexado ({{ $imagem->tipo_mime }})
+                        <br><small>Tipo de arquivo não é uma imagem</small>
                     </div>
-                @elseif($tamanhoArquivo > 2 * 1024 * 1024)
+                @elseif($tamanhoArquivo > 5 * 1024 * 1024)
                     <div class="status-box warning">
-                        ⚠️ Imagem muito grande
+                        ⚠️ Imagem muito grande para exibição ({{ $tamanhoKB }} KB)
+                        <br><small>Limite: 5MB para geração de PDF</small>
+                    </div>
+                @elseif(!$imagemBase64)
+                    <div class="status-box error">
+                        ❌ Erro ao processar imagem
+                        <br><small>Não foi possível converter para base64</small>
                     </div>
                 @else
                     <div class="status-box success">
-                        ✅ Imagem incluída
+                        ✅ Imagem incluída ({{ $tamanhoKB }} KB)
                     </div>
                     <div class="image-container">
-                        <img src="{{ $caminhoCompleto }}" alt="Imagem {{ $index + 1 }}">
+                        <img src="{{ $imagemBase64 }}" alt="Imagem {{ $index + 1 }}: {{ $imagem->nome_original ?: $imagem->nome_arquivo }}" style="max-width: 100%; height: auto;">
                         <div class="image-caption">{{ $imagem->nome_original ?: $imagem->nome_arquivo }}</div>
                     </div>
                 @endif

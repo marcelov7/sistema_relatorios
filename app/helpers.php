@@ -183,4 +183,13 @@ if (!function_exists('current_datetime_br')) {
         $now = new \Carbon\Carbon('now', new \DateTimeZone('America/Sao_Paulo'));
         return $now->format($format);
     }
+}
+
+if (!function_exists('str_limit_safe')) {
+    /**
+     * Limitar string de forma segura
+     */
+    function str_limit_safe($value, $limit = 100, $end = '...') {
+        return \App\Helpers\StringHelper::limit($value, $limit, $end);
+    }
 } 

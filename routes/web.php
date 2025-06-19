@@ -198,5 +198,7 @@ Route::get('/teste-pdf-gerador/{id}', function($id) {
     return $controller->inspecao($inspecao);
 })->name('teste.pdf.gerador');
 
+
+
 // Rota de teste para acessibilidade
 Route::get('/test-accessibility', [AccessibilityController::class, 'test'])->name('test.accessibility');

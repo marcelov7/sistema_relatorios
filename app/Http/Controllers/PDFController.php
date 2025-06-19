@@ -339,18 +339,58 @@ class PDFController extends Controller
             $nomeArquivo = 'relatorio_' . $relatorio->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
             $caminhoArquivo = storage_path('app/public/' . $nomeArquivo);
             
+            // Log para debug com informações das imagens
+            $totalImagens = $relatorio->imagens ? $relatorio->imagens->count() : 0;
+            \Log::info('Gerando PDF com Browsershot', [
+                'relatorio_id' => $relatorio->id,
+                'total_imagens' => $totalImagens,
+                'arquivo_destino' => $caminhoArquivo
+            ]);
+            
             Browsershot::html($html)
                 ->setOption('landscape', false)
                 ->paperSize(210, 297) // A4 em mm
                 ->margins(10, 10, 10, 10) // margens em mm
                 ->waitUntilNetworkIdle()
-                ->timeout(60)
+                ->timeout(120) // Aumentado para 2 minutos devido às imagens
                 ->setOption('printBackground', true)
+                ->setOption('preferCSSPageSize', true)
+                ->setOption('displayHeaderFooter', false)
+                ->setOption('args', [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor',
+                    '--allow-file-access-from-files',
+                    '--enable-local-file-accesses',
+                    '--disable-images-loading=false', // Garantir que imagens sejam carregadas
+                    '--disable-javascript=false' // Permitir JS se necessário
+                ])
                 ->save($caminhoArquivo);
             
-            return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            if (file_exists($caminhoArquivo)) {
+                $tamanhoFinal = filesize($caminhoArquivo);
+                \Log::info('PDF gerado com sucesso', [
+                    'relatorio_id' => $relatorio->id,
+                    'tamanho_pdf' => number_format($tamanhoFinal / 1024, 2) . ' KB',
+                    'total_imagens' => $totalImagens
+                ]);
+                
+                return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('Arquivo PDF não foi criado');
+            }
             
         } catch (\Exception $e) {
+            \Log::error('Erro ao gerar PDF com Browsershot', [
+                'relatorio_id' => $id,
+                'erro' => $e->getMessage(),
+                'linha' => $e->getLine(),
+                'arquivo' => basename($e->getFile())
+            ]);
+            
             return back()->with('error', 'Erro ao gerar PDF: ' . $e->getMessage());
         }
     }
@@ -370,18 +410,50 @@ class PDFController extends Controller
             $nomeArquivo = 'inspecao_' . $inspecao->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
             $caminhoArquivo = storage_path('app/public/' . $nomeArquivo);
             
+            \Log::info('Gerando PDF Inspeção com Browsershot', [
+                'inspecao_id' => $inspecao->id,
+                'arquivo_destino' => $caminhoArquivo
+            ]);
+            
             Browsershot::html($html)
                 ->setOption('landscape', false)
                 ->paperSize(210, 297) // A4 em mm
                 ->margins(10, 10, 10, 10) // margens em mm
                 ->waitUntilNetworkIdle()
-                ->timeout(60)
+                ->timeout(120)
                 ->setOption('printBackground', true)
+                ->setOption('preferCSSPageSize', true)
+                ->setOption('displayHeaderFooter', false)
+                ->setOption('args', [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
+                ])
                 ->save($caminhoArquivo);
             
-            return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            if (file_exists($caminhoArquivo)) {
+                $tamanhoFinal = filesize($caminhoArquivo);
+                \Log::info('PDF Inspeção gerado com sucesso', [
+                    'inspecao_id' => $inspecao->id,
+                    'tamanho_pdf' => number_format($tamanhoFinal / 1024, 2) . ' KB'
+                ]);
+                
+                return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('Arquivo PDF não foi criado');
+            }
             
         } catch (\Exception $e) {
+            \Log::error('Erro ao gerar PDF Inspeção com Browsershot', [
+                'inspecao_id' => $id,
+                'erro' => $e->getMessage(),
+                'linha' => $e->getLine(),
+                'arquivo' => basename($e->getFile())
+            ]);
+            
             return back()->with('error', 'Erro ao gerar PDF: ' . $e->getMessage());
         }
     }
@@ -401,18 +473,50 @@ class PDFController extends Controller
             $nomeArquivo = 'analisador_' . $analisador->id . '_' . date('Y-m-d_H-i-s') . '.pdf';
             $caminhoArquivo = storage_path('app/public/' . $nomeArquivo);
             
+            \Log::info('Gerando PDF Analisador com Browsershot', [
+                'analisador_id' => $analisador->id,
+                'arquivo_destino' => $caminhoArquivo
+            ]);
+            
             Browsershot::html($html)
                 ->setOption('landscape', false)
                 ->paperSize(210, 297) // A4 em mm
                 ->margins(10, 10, 10, 10) // margens em mm
                 ->waitUntilNetworkIdle()
-                ->timeout(60)
+                ->timeout(120)
                 ->setOption('printBackground', true)
+                ->setOption('preferCSSPageSize', true)
+                ->setOption('displayHeaderFooter', false)
+                ->setOption('args', [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
+                ])
                 ->save($caminhoArquivo);
             
-            return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            if (file_exists($caminhoArquivo)) {
+                $tamanhoFinal = filesize($caminhoArquivo);
+                \Log::info('PDF Analisador gerado com sucesso', [
+                    'analisador_id' => $analisador->id,
+                    'tamanho_pdf' => number_format($tamanhoFinal / 1024, 2) . ' KB'
+                ]);
+                
+                return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('Arquivo PDF não foi criado');
+            }
             
         } catch (\Exception $e) {
+            \Log::error('Erro ao gerar PDF Analisador com Browsershot', [
+                'analisador_id' => $id,
+                'erro' => $e->getMessage(),
+                'linha' => $e->getLine(),
+                'arquivo' => basename($e->getFile())
+            ]);
+            
             return back()->with('error', 'Erro ao gerar PDF: ' . $e->getMessage());
         }
     }
@@ -443,19 +547,52 @@ class PDFController extends Controller
             $nomeArquivo = 'analytics_' . $dataInicio->format('Y-m-d') . '_a_' . $dataFim->format('Y-m-d') . '_' . date('H-i-s') . '.pdf';
             $caminhoArquivo = storage_path('app/public/' . $nomeArquivo);
             
+            \Log::info('Gerando PDF Analytics com Browsershot', [
+                'periodo' => $dataInicio->format('Y-m-d') . ' a ' . $dataFim->format('Y-m-d'),
+                'arquivo_destino' => $caminhoArquivo
+            ]);
+            
             Browsershot::html($html)
                 ->setOption('landscape', false)
                 ->paperSize(210, 297) // A4 em mm
                 ->margins(10, 10, 10, 10) // margens em mm
                 ->waitUntilNetworkIdle()
-                ->timeout(60)
+                ->timeout(120)
                 ->setOption('printBackground', true)
+                ->setOption('preferCSSPageSize', true)
+                ->setOption('displayHeaderFooter', false)
+                ->setOption('args', [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
+                ])
                 ->save($caminhoArquivo);
             
-            return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            if (file_exists($caminhoArquivo)) {
+                $tamanhoFinal = filesize($caminhoArquivo);
+                \Log::info('PDF Analytics gerado com sucesso', [
+                    'periodo' => $dataInicio->format('Y-m-d') . ' a ' . $dataFim->format('Y-m-d'),
+                    'tamanho_pdf' => number_format($tamanhoFinal / 1024, 2) . ' KB'
+                ]);
+                
+                return response()->download($caminhoArquivo)->deleteFileAfterSend(true);
+            } else {
+                throw new \Exception('Arquivo PDF não foi criado');
+            }
             
         } catch (\Exception $e) {
+            \Log::error('Erro ao gerar PDF Analytics com Browsershot', [
+                'erro' => $e->getMessage(),
+                'linha' => $e->getLine(),
+                'arquivo' => basename($e->getFile())
+            ]);
+            
             return back()->with('error', 'Erro ao gerar PDF: ' . $e->getMessage());
         }
     }
+
+
 }
