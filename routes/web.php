@@ -155,6 +155,9 @@ Route::middleware('auth')->group(function () {
     // --- Sistema e Versionamento ---
     Route::get('/system/info', [SystemController::class, 'info'])->name('system.info');
     Route::get('/system/changelog', [SystemController::class, 'changelog'])->name('system.changelog');
+    Route::get('/system/upload-debug', function () {
+        return view('system.upload-debug');
+    })->name('system.upload-debug');
     
     // --- Acessibilidade ---
     Route::get('/accessibility', [AccessibilityController::class, 'index'])->name('accessibility.index');

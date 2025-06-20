@@ -167,7 +167,22 @@ class RelatorioController extends Controller
 
         // Processar imagens
         if ($request->hasFile('imagens')) {
-            $this->processarImagens($request->file('imagens'), $relatorio);
+            try {
+                $this->processarImagens($request->file('imagens'), $relatorio);
+            } catch (\Exception $e) {
+                // Se houver erro com imagens, deletar o relatório e retornar erro
+                $relatorio->delete();
+                
+                \Log::error("Erro ao criar relatório com imagens", [
+                    'erro' => $e->getMessage(),
+                    'usuario_id' => auth()->id()
+                ]);
+                
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', 'Erro ao processar imagens: ' . $e->getMessage());
+            }
         }
 
         return redirect()
@@ -265,7 +280,20 @@ class RelatorioController extends Controller
 
         // Processar novas imagens
         if ($request->hasFile('imagens')) {
-            $this->processarImagens($request->file('imagens'), $relatorio);
+            try {
+                $this->processarImagens($request->file('imagens'), $relatorio);
+            } catch (\Exception $e) {
+                \Log::error("Erro ao atualizar relatório com imagens", [
+                    'relatorio_id' => $relatorio->id,
+                    'erro' => $e->getMessage(),
+                    'usuario_id' => auth()->id()
+                ]);
+                
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', 'Erro ao processar imagens: ' . $e->getMessage());
+            }
         }
 
         return redirect()
@@ -319,7 +347,21 @@ class RelatorioController extends Controller
 
         // Processar imagens do histórico
         if ($request->hasFile('imagens')) {
-            $this->processarImagensHistorico($request->file('imagens'), $relatorio, $historico);
+            try {
+                $this->processarImagensHistorico($request->file('imagens'), $relatorio, $historico);
+            } catch (\Exception $e) {
+                \Log::error("Erro ao processar imagens do histórico", [
+                    'relatorio_id' => $relatorio->id,
+                    'historico_id' => $historico->id,
+                    'erro' => $e->getMessage(),
+                    'usuario_id' => auth()->id()
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao processar imagens: ' . $e->getMessage()
+                ], 422);
+            }
         }
 
         return response()->json([
@@ -425,28 +467,94 @@ class RelatorioController extends Controller
      */
     private function processarImagens($imagens, Relatorio $relatorio)
     {
-        foreach ($imagens as $imagem) {
-            $nomeOriginal = $imagem->getClientOriginalName();
-            $extensao = $imagem->getClientOriginalExtension();
-            $nomeArquivo = Str::uuid() . '.' . $extensao;
-            $caminhoArquivo = 'relatorios/' . $relatorio->id . '/' . $nomeArquivo;
+        foreach ($imagens as $index => $imagem) {
+            try {
+                // Validações adicionais
+                if (!$imagem->isValid()) {
+                    \Log::error("Imagem inválida no índice {$index}", [
+                        'error' => $imagem->getError(),
+                        'original_name' => $imagem->getClientOriginalName()
+                    ]);
+                    throw new \Exception("Arquivo de imagem inválido: {$imagem->getClientOriginalName()}");
+                }
 
-            // Criar diretório se não existir
-            Storage::disk('public')->makeDirectory('relatorios/' . $relatorio->id);
+                // Verificar se o arquivo foi realmente enviado
+                if (!$imagem->isFile()) {
+                    throw new \Exception("Arquivo não foi enviado corretamente");
+                }
 
-            // Salvar arquivo
-            $caminho = $imagem->storeAs('relatorios/' . $relatorio->id, $nomeArquivo, 'public');
+                // Verificar tamanho do arquivo
+                $tamanhoMB = $imagem->getSize() / 1024 / 1024;
+                if ($tamanhoMB > 7) {
+                    throw new \Exception("Imagem {$imagem->getClientOriginalName()} excede o limite de 7MB (atual: {$tamanhoMB}MB)");
+                }
 
-            // Salvar no banco
-            RelatorioImagem::create([
-                'relatorio_id' => $relatorio->id,
-                'nome_arquivo' => $nomeArquivo,
-                'nome_original' => $nomeOriginal,
-                'caminho_arquivo' => $caminho,
-                'tamanho_arquivo' => $imagem->getSize(),
-                'tipo_mime' => $imagem->getMimeType(),
-                'tenant_id' => 1 // Temporário
-            ]);
+                $nomeOriginal = $imagem->getClientOriginalName();
+                $extensao = $imagem->getClientOriginalExtension();
+                $nomeArquivo = Str::uuid() . '.' . $extensao;
+                $diretorioRelatorio = 'relatorios/' . $relatorio->id;
+
+                // Criar diretório se não existir
+                if (!Storage::disk('public')->exists($diretorioRelatorio)) {
+                    $created = Storage::disk('public')->makeDirectory($diretorioRelatorio);
+                    if (!$created) {
+                        throw new \Exception("Não foi possível criar o diretório: {$diretorioRelatorio}");
+                    }
+                }
+
+                // Verificar se o diretório é gravável
+                $fullPath = storage_path('app/public/' . $diretorioRelatorio);
+                if (!is_writable($fullPath)) {
+                    throw new \Exception("Diretório não é gravável: {$fullPath}");
+                }
+
+                // Salvar arquivo
+                $caminho = $imagem->storeAs($diretorioRelatorio, $nomeArquivo, 'public');
+                
+                if (!$caminho) {
+                    throw new \Exception("Falha ao salvar o arquivo no storage");
+                }
+
+                // Verificar se o arquivo foi realmente salvo
+                if (!Storage::disk('public')->exists($caminho)) {
+                    throw new \Exception("Arquivo não foi encontrado após o salvamento: {$caminho}");
+                }
+
+                // Salvar no banco
+                $imagemModel = RelatorioImagem::create([
+                    'relatorio_id' => $relatorio->id,
+                    'nome_arquivo' => $nomeArquivo,
+                    'nome_original' => $nomeOriginal,
+                    'caminho_arquivo' => $caminho,
+                    'tamanho_arquivo' => $imagem->getSize(),
+                    'tipo_mime' => $imagem->getMimeType(),
+                    'tenant_id' => 1 // Temporário
+                ]);
+
+                if (!$imagemModel) {
+                    // Se não conseguiu salvar no banco, remover o arquivo
+                    Storage::disk('public')->delete($caminho);
+                    throw new \Exception("Falha ao salvar informações da imagem no banco de dados");
+                }
+
+                \Log::info("Imagem processada com sucesso", [
+                    'nome_original' => $nomeOriginal,
+                    'caminho' => $caminho,
+                    'tamanho_mb' => round($tamanhoMB, 2),
+                    'relatorio_id' => $relatorio->id
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error("Erro ao processar imagem", [
+                    'index' => $index,
+                    'nome_original' => $imagem->getClientOriginalName() ?? 'desconhecido',
+                    'erro' => $e->getMessage(),
+                    'relatorio_id' => $relatorio->id
+                ]);
+                
+                // Re-throw a exceção para que seja capturada pelo controller
+                throw new \Exception("Erro ao processar a imagem '{$imagem->getClientOriginalName()}': " . $e->getMessage());
+            }
         }
     }
 
@@ -455,29 +563,100 @@ class RelatorioController extends Controller
      */
     private function processarImagensHistorico($imagens, Relatorio $relatorio, \App\Models\RelatorioHistorico $historico)
     {
-        foreach ($imagens as $imagem) {
-            $nomeOriginal = $imagem->getClientOriginalName();
-            $extensao = $imagem->getClientOriginalExtension();
-            $nomeArquivo = Str::uuid() . '.' . $extensao;
-            $caminhoArquivo = "relatorios/{$relatorio->id}/historico/{$historico->id}/{$nomeArquivo}";
+        foreach ($imagens as $index => $imagem) {
+            try {
+                // Validações adicionais
+                if (!$imagem->isValid()) {
+                    \Log::error("Imagem de histórico inválida no índice {$index}", [
+                        'error' => $imagem->getError(),
+                        'original_name' => $imagem->getClientOriginalName(),
+                        'relatorio_id' => $relatorio->id,
+                        'historico_id' => $historico->id
+                    ]);
+                    throw new \Exception("Arquivo de imagem inválido: {$imagem->getClientOriginalName()}");
+                }
 
-            // Criar diretório se não existir
-            Storage::disk('public')->makeDirectory("relatorios/{$relatorio->id}/historico/{$historico->id}");
+                // Verificar se o arquivo foi realmente enviado
+                if (!$imagem->isFile()) {
+                    throw new \Exception("Arquivo não foi enviado corretamente");
+                }
 
-            // Salvar arquivo
-            $imagem->storeAs("relatorios/{$relatorio->id}/historico/{$historico->id}", $nomeArquivo, 'public');
+                // Verificar tamanho do arquivo
+                $tamanhoMB = $imagem->getSize() / 1024 / 1024;
+                if ($tamanhoMB > 7) {
+                    throw new \Exception("Imagem {$imagem->getClientOriginalName()} excede o limite de 7MB (atual: {$tamanhoMB}MB)");
+                }
 
-            // Salvar no banco (vinculado ao histórico)
-            RelatorioImagem::create([
-                'relatorio_id' => $relatorio->id,
-                'historico_id' => $historico->id,
-                'nome_arquivo' => $nomeArquivo,
-                'nome_original' => $nomeOriginal,
-                'caminho_arquivo' => $caminhoArquivo,
-                'tamanho_arquivo' => $imagem->getSize(),
-                'tipo_mime' => $imagem->getMimeType(),
-                'tenant_id' => 1 // Temporário
-            ]);
+                $nomeOriginal = $imagem->getClientOriginalName();
+                $extensao = $imagem->getClientOriginalExtension();
+                $nomeArquivo = Str::uuid() . '.' . $extensao;
+                $diretorioHistorico = "relatorios/{$relatorio->id}/historico/{$historico->id}";
+                $caminhoArquivo = "{$diretorioHistorico}/{$nomeArquivo}";
+
+                // Criar diretório se não existir
+                if (!Storage::disk('public')->exists($diretorioHistorico)) {
+                    $created = Storage::disk('public')->makeDirectory($diretorioHistorico);
+                    if (!$created) {
+                        throw new \Exception("Não foi possível criar o diretório: {$diretorioHistorico}");
+                    }
+                }
+
+                // Verificar se o diretório é gravável
+                $fullPath = storage_path('app/public/' . $diretorioHistorico);
+                if (!is_writable($fullPath)) {
+                    throw new \Exception("Diretório não é gravável: {$fullPath}");
+                }
+
+                // Salvar arquivo
+                $caminho = $imagem->storeAs($diretorioHistorico, $nomeArquivo, 'public');
+                
+                if (!$caminho) {
+                    throw new \Exception("Falha ao salvar o arquivo no storage");
+                }
+
+                // Verificar se o arquivo foi realmente salvo
+                if (!Storage::disk('public')->exists($caminho)) {
+                    throw new \Exception("Arquivo não foi encontrado após o salvamento: {$caminho}");
+                }
+
+                // Salvar no banco (vinculado ao histórico)
+                $imagemModel = RelatorioImagem::create([
+                    'relatorio_id' => $relatorio->id,
+                    'historico_id' => $historico->id,
+                    'nome_arquivo' => $nomeArquivo,
+                    'nome_original' => $nomeOriginal,
+                    'caminho_arquivo' => $caminho,
+                    'tamanho_arquivo' => $imagem->getSize(),
+                    'tipo_mime' => $imagem->getMimeType(),
+                    'tenant_id' => 1 // Temporário
+                ]);
+
+                if (!$imagemModel) {
+                    // Se não conseguiu salvar no banco, remover o arquivo
+                    Storage::disk('public')->delete($caminho);
+                    throw new \Exception("Falha ao salvar informações da imagem no banco de dados");
+                }
+
+                \Log::info("Imagem de histórico processada com sucesso", [
+                    'nome_original' => $nomeOriginal,
+                    'caminho' => $caminho,
+                    'tamanho_mb' => round($tamanhoMB, 2),
+                    'relatorio_id' => $relatorio->id,
+                    'historico_id' => $historico->id
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error("Erro ao processar imagem de histórico", [
+                    'index' => $index,
+                    'nome_original' => $imagem->getClientOriginalName() ?? 'desconhecido',
+                    'erro' => $e->getMessage(),
+                    'relatorio_id' => $relatorio->id,
+                    'historico_id' => $historico->id
+                ]);
+                
+                // Re-throw a exceção para que seja capturada pelo controller
+                throw new \Exception("Erro ao processar a imagem '{$imagem->getClientOriginalName()}': " . $e->getMessage());
+            }
         }
     }
 

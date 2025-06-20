@@ -508,6 +508,15 @@
                                 </a>
                             </li>
                             
+                            @if(hasRole(['admin', 'supervisor']))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('system.upload-debug') }}">
+                                        <i class="bi bi-bug me-1"></i>
+                                        Debug Upload
+                                    </a>
+                                </li>
+                            @endif
+                            
                             <li class="nav-item">
                                 <a class="nav-link text-danger" href="{{ route('logout') }}"
                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
