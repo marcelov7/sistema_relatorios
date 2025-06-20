@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Converter Favicon</title>
+</head>
+<body>
+    <canvas id="canvas" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <a id="download" download="favicon.ico" style="display:none;">Download ICO</a>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Desenhar o favicon
+        const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+        gradient.addColorStop(0, '#6366f1');
+        gradient.addColorStop(1, '#8b5cf6');
+        
+        // Documento base
+        ctx.fillStyle = gradient;
+        ctx.strokeStyle = '#4f46e5';
+        ctx.lineWidth = 1;
+        ctx.roundRect(6, 4, 20, 24, 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Linhas do relatório
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(10, 10);
+        ctx.lineTo(22, 10);
+        ctx.stroke();
+        
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(10, 14);
+        ctx.lineTo(20, 14);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(10, 18);
+        ctx.lineTo(22, 18);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(10, 22);
+        ctx.lineTo(18, 22);
+        ctx.stroke();
+        
+        // Ícones de gráfico
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(20, 20, 2, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(18, 18, 1.5, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(22, 16, 1.5, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Função para arredondar retângulos (fallback)
+        if (!ctx.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.lineTo(x + width - radius, y);
+                this.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.lineTo(x + width, y + height - radius);
+                this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.lineTo(x + radius, y + height);
+                this.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.lineTo(x, y + radius);
+                this.quadraticCurveTo(x, y, x + radius, y);
+                this.closePath();
+            };
+        }
+        
+        console.log('Favicon gerado no canvas. Para criar ICO, use um conversor online.');
+    </script>
+</body>
+</html> 
