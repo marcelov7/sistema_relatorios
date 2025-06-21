@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class RelatorioV2Controller extends Controller
 {
@@ -19,6 +20,9 @@ class RelatorioV2Controller extends Controller
      */
     public function create()
     {
+        // Verificar se a tabela relatorio_itens existe, se não existir, criar
+        $this->ensureRelatorioItensTableExists();
+        
         $locais = Local::orderBy('nome')->get();
         $equipamentos = Equipamento::with('local')->orderBy('nome')->get();
         
@@ -162,5 +166,36 @@ class RelatorioV2Controller extends Controller
                                   ->get(['id', 'nome', 'codigo']);
 
         return response()->json($equipamentos);
+    }
+
+    /**
+     * Garantir que a tabela relatorio_itens existe
+     */
+    private function ensureRelatorioItensTableExists()
+    {
+        if (!Schema::hasTable('relatorio_itens')) {
+            Log::info('Criando tabela relatorio_itens dinamicamente');
+            
+            Schema::create('relatorio_itens', function ($table) {
+                $table->id();
+                $table->integer('relatorio_id')->unsigned();
+                $table->integer('equipamento_id')->unsigned();
+                $table->text('descricao_equipamento');
+                $table->text('observacoes')->nullable();
+                $table->enum('status_item', ['pendente', 'em_andamento', 'concluido'])->default('pendente');
+                $table->integer('ordem')->default(1);
+                $table->timestamps();
+                
+                // Foreign keys
+                $table->foreign('relatorio_id')->references('id')->on('relatorios')->onDelete('cascade');
+                $table->foreign('equipamento_id')->references('id')->on('equipamentos');
+                
+                // Índices para performance
+                $table->index(['relatorio_id', 'ordem']);
+                $table->index('equipamento_id');
+            });
+            
+            Log::info('Tabela relatorio_itens criada com sucesso');
+        }
     }
 }
