@@ -318,8 +318,7 @@
                         <div class="form-section">
                             <h6>
                                 <i class="bi bi-geo-alt me-2"></i>
-                                Localização e Equipamento
-                                <small class="text-muted fw-normal">(Opcional)</small>
+                                Localização e Equipamento *
                             </h6>
                             
                             <div class="row g-3">
@@ -327,8 +326,8 @@
                                     <div class="form-floating">
                                         <select class="form-select @error('local_id') is-invalid @enderror" 
                                                 id="local_id" name="local_id" data-original="{{ $relatorio->local_id }}"
-                                                onchange="updateEquipamentosByLocal()">
-                                            <option value="">Selecione um local</option>
+                                                onchange="updateEquipamentosByLocal()" required>
+                                            <option value="">Selecione um local *</option>
                                             @foreach($locais as $local)
                                                 <option value="{{ $local->id }}" 
                                                         {{ old('local_id', $relatorio->local_id) == $local->id ? 'selected' : '' }}>
@@ -337,7 +336,7 @@
                                             @endforeach
                                         </select>
                                         <label for="local_id">
-                                            <i class="bi bi-geo-alt me-2"></i>Local
+                                            <i class="bi bi-geo-alt me-2"></i>Local *
                                         </label>
                                         @error('local_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -348,11 +347,11 @@
                                 <div class="col-12 col-md-6">
                                     <div class="form-floating">
                                         <select class="form-select @error('equipamento_id') is-invalid @enderror" 
-                                                id="equipamento_id" name="equipamento_id" data-original="{{ $relatorio->equipamento_id }}">
-                                            <option value="">Primeiro selecione um local</option>
+                                                id="equipamento_id" name="equipamento_id" data-original="{{ $relatorio->equipamento_id }}" required>
+                                            <option value="">Primeiro selecione um local *</option>
                                         </select>
                                         <label for="equipamento_id">
-                                            <i class="bi bi-cpu me-2"></i>Equipamento
+                                            <i class="bi bi-cpu me-2"></i>Equipamento *
                                         </label>
                                         @error('equipamento_id')
                                             <div class="invalid-feedback">{{ $message }}</div>

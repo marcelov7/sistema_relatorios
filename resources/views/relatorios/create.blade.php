@@ -479,14 +479,13 @@
                             </div>
                         </div>
 
-                        <!-- Localização (Opcional) -->
+                        <!-- Localização (Obrigatório) -->
                         <div class="form-section" :class="{ 'active': activeSection === 'location' }" 
                              @click="activeSection = 'location'">
                             <h6>
                                 <i class="bi bi-geo-alt me-2"></i>
-                                Localização e Equipamento
-                                <small class="text-muted fw-normal">(Opcional)</small>
-                                <span x-show="formData.local_id || formData.equipamento_id" class="ms-2">
+                                Localização e Equipamento *
+                                <span x-show="formData.local_id && formData.equipamento_id" class="ms-2">
                                     <i class="bi bi-check-circle text-success"></i>
                                 </span>
                             </h6>
@@ -498,14 +497,15 @@
                                                 id="local_id" 
                                                 name="local_id" 
                                                 x-model="formData.local_id"
-                                                @change="updateEquipamentosByLocal(); saveDraft()">
-                                            <option value="">Selecione um local</option>
+                                                @change="updateEquipamentosByLocal(); saveDraft()"
+                                                required>
+                                            <option value="">Selecione um local *</option>
                                             @foreach($locais as $local)
                                                 <option value="{{ $local->id }}">{{ $local->nome }}</option>
                                             @endforeach
                                         </select>
                                         <label for="local_id">
-                                            <i class="bi bi-geo-alt me-2"></i>Local
+                                            <i class="bi bi-geo-alt me-2"></i>Local *
                                         </label>
                                         <div class="form-text">
                                             <i class="bi bi-info-circle me-1"></i>
@@ -521,18 +521,19 @@
                                                 name="equipamento_id" 
                                                 x-model="formData.equipamento_id"
                                                 @change="saveDraft()"
-                                                :disabled="!formData.local_id">
+                                                :disabled="!formData.local_id"
+                                                required>
                                             <option value="">
-                                                <span x-show="!formData.local_id">Primeiro selecione um local</span>
+                                                <span x-show="!formData.local_id">Primeiro selecione um local *</span>
                                                 <span x-show="formData.local_id && filteredEquipamentos.length === 0">Nenhum equipamento disponível</span>
-                                                <span x-show="formData.local_id && filteredEquipamentos.length > 0">Selecione um equipamento</span>
+                                                <span x-show="formData.local_id && filteredEquipamentos.length > 0">Selecione um equipamento *</span>
                                             </option>
                                             <template x-for="equipamento in filteredEquipamentos" :key="equipamento.id">
                                                 <option :value="equipamento.id" x-text="equipamento.display_name"></option>
                                             </template>
                                         </select>
                                         <label for="equipamento_id">
-                                            <i class="bi bi-cpu me-2"></i>Equipamento
+                                            <i class="bi bi-cpu me-2"></i>Equipamento *
                                         </label>
                                         <div class="form-text">
                                             <i class="bi bi-info-circle me-1"></i>
@@ -994,7 +995,9 @@
                        !this.errors.descricao && 
                        !this.errors.data_ocorrencia &&
                        this.formData.titulo.trim() &&
-                       this.formData.descricao.trim();
+                       this.formData.descricao.trim() &&
+                       this.formData.local_id &&
+                       this.formData.equipamento_id;
             },
 
             // Rascunho

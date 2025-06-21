@@ -156,8 +156,8 @@ class RelatorioController extends Controller
             'status' => 'required|in:pendente,em_andamento,resolvido',
             'prioridade' => 'required|in:baixa,media,alta,critica',
             'progresso' => 'required|integer|min:0|max:100',
-            'local_id' => 'nullable|exists:locais,id',
-            'equipamento_id' => 'nullable|exists:equipamentos,id',
+            'local_id' => 'required|exists:locais,id',
+            'equipamento_id' => 'required|exists:equipamentos,id',
             'imagens.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:7168' // 7MB em KB
         ]);
 
@@ -277,8 +277,8 @@ class RelatorioController extends Controller
             'status' => 'required|in:pendente,em_andamento,resolvido',
             'prioridade' => 'required|in:baixa,media,alta,critica',
             'progresso' => 'required|integer|min:0|max:100',
-            'local_id' => 'nullable|exists:locais,id',
-            'equipamento_id' => 'nullable|exists:equipamentos,id',
+            'local_id' => 'required|exists:locais,id',
+            'equipamento_id' => 'required|exists:equipamentos,id',
             'imagens.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:7168', // 7MB em KB
             'remover_imagens' => 'nullable|array',
             'remover_imagens.*' => 'exists:relatorio_imagens,id'
