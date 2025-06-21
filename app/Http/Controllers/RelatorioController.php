@@ -178,11 +178,29 @@ class RelatorioController extends Controller
                     'usuario_id' => auth()->id()
                 ]);
                 
+                // Verificar se é uma requisição AJAX
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erro ao processar imagens: ' . $e->getMessage()
+                    ], 422);
+                }
+                
                 return redirect()
                     ->back()
                     ->withInput()
                     ->with('error', 'Erro ao processar imagens: ' . $e->getMessage());
             }
+        }
+
+        // Verificar se é uma requisição AJAX
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Relatório criado com sucesso!',
+                'relatorio_id' => $relatorio->id,
+                'redirect_url' => route('relatorios.show', $relatorio)
+            ]);
         }
 
         return redirect()

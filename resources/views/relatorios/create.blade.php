@@ -1058,22 +1058,93 @@
                     return;
                 }
 
-                this.submitting = true;
-                
-                // Adicionar imagens ao FormData
-                const form = this.$refs.form;
-                const formData = new FormData(form);
-                
-                // Remover imagens existentes do FormData
-                formData.delete('imagens[]');
-                
-                // Adicionar imagens selecionadas
-                this.selectedImages.forEach(image => {
-                    formData.append('imagens[]', image.file);
-                });
-                
-                // Limpar rascunho após envio bem-sucedido
-                localStorage.removeItem('relatorio_draft');
+                // Verificar se temos imagens selecionadas que precisam ser anexadas
+                if (this.selectedImages.length > 0) {
+                    event.preventDefault();
+                    this.submitting = true;
+                    
+                    // Criar FormData com todos os dados do formulário
+                    const form = this.$refs.form;
+                    const formData = new FormData(form);
+                    
+                    // Remover qualquer input de imagens existente do FormData
+                    formData.delete('imagens[]');
+                    
+                    // Adicionar imagens selecionadas
+                    this.selectedImages.forEach(image => {
+                        formData.append('imagens[]', image.file);
+                    });
+                    
+                    // Enviar via AJAX usando fetch
+                                         fetch(form.action, {
+                         method: 'POST',
+                         body: formData,
+                         headers: {
+                             'X-Requested-With': 'XMLHttpRequest',
+                         }
+                     })
+                     .then(response => {
+                         // Verificar se é JSON (resposta de API) ou HTML (redirect)
+                         const contentType = response.headers.get('content-type');
+                         if (contentType && contentType.includes('application/json')) {
+                             return response.json().then(data => {
+                                 if (!response.ok) {
+                                     throw new Error(data.message || 'Erro na resposta: ' + response.status);
+                                 }
+                                 // Limpar rascunho após envio bem-sucedido
+                                 localStorage.removeItem('relatorio_draft');
+                                 return data;
+                             });
+                         } else {
+                             if (response.ok) {
+                                 // Limpar rascunho após envio bem-sucedido
+                                 localStorage.removeItem('relatorio_draft');
+                                 return response.text().then(text => ({ redirect: true, html: text }));
+                             } else {
+                                 throw new Error('Erro na resposta: ' + response.status);
+                             }
+                         }
+                     })
+                                         .then(data => {
+                         if (data.success === true) {
+                             // Resposta JSON de sucesso
+                             if (data.redirect_url) {
+                                 window.location.href = data.redirect_url;
+                             } else if (data.relatorio_id) {
+                                 window.location.href = `/relatorios/${data.relatorio_id}`;
+                             } else {
+                                 window.location.href = "{{ route('relatorios.index') }}";
+                             }
+                         } else if (data.redirect && data.html) {
+                             // Resposta HTML - provavelmente um redirect
+                             if (data.html.includes('relatorios/')) {
+                                 // Extrair ID do relatório do HTML se possível, ou redirecionar para index
+                                 const match = data.html.match(/relatorios\/(\d+)/);
+                                 if (match) {
+                                     window.location.href = `/relatorios/${match[1]}`;
+                                 } else {
+                                     window.location.href = "{{ route('relatorios.index') }}";
+                                 }
+                             } else {
+                                 window.location.href = "{{ route('relatorios.index') }}";
+                             }
+                         } else if (data.success !== false) {
+                             // Fallback - redirecionar para a página de relatórios
+                             window.location.href = "{{ route('relatorios.index') }}";
+                         } else {
+                             throw new Error(data.message || 'Erro desconhecido');
+                         }
+                     })
+                                         .catch(error => {
+                         console.error('Erro:', error);
+                         alert('Erro ao salvar o relatório: ' + error.message);
+                         this.submitting = false;
+                     });
+                } else {
+                    // Se não há imagens, permitir o envio normal do formulário
+                    this.submitting = true;
+                    localStorage.removeItem('relatorio_draft');
+                }
             }
         }
     }

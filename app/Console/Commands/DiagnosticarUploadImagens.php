@@ -9,143 +9,67 @@ use App\Models\Relatorio;
 
 class DiagnosticarUploadImagens extends Command
 {
-    protected $signature = 'relatorios:diagnosticar-upload';
-    protected $description = 'Diagnostica problemas com upload de imagens em relatórios';
+    protected $signature = 'relatorio:diagnosticar-upload';
+    protected $description = 'Diagnostica problemas de upload de imagens em relatórios';
 
     public function handle()
     {
-        $this->info('🔍 Iniciando diagnóstico de upload de imagens...');
-        $this->newLine();
-
-        // 1. Verificar configurações do PHP
-        $this->info('📋 Verificando configurações do PHP:');
-        $this->line('- upload_max_filesize: ' . ini_get('upload_max_filesize'));
-        $this->line('- post_max_size: ' . ini_get('post_max_size'));
-        $this->line('- max_file_uploads: ' . ini_get('max_file_uploads'));
-        $this->line('- memory_limit: ' . ini_get('memory_limit'));
-        $this->line('- max_execution_time: ' . ini_get('max_execution_time'));
-        $this->newLine();
-
-        // 2. Verificar permissões de diretórios
-        $this->info('📁 Verificando permissões de diretórios:');
-        $storagePath = storage_path('app/public');
-        $relatoriosPath = storage_path('app/public/relatorios');
+        $this->info('Iniciando diagnóstico de upload de imagens...');
         
-        $this->line('- Storage path: ' . $storagePath);
-        $this->line('  Existe: ' . (is_dir($storagePath) ? '✅' : '❌'));
-        $this->line('  Gravável: ' . (is_writable($storagePath) ? '✅' : '❌'));
+        // Verificar últimos relatórios criados
+        $ultimosRelatorios = Relatorio::with('imagens')
+            ->orderBy('data_criacao', 'desc')
+            ->take(10)
+            ->get();
+            
+        $this->info("Analisando os últimos 10 relatórios:");
         
-        if (!is_dir($relatoriosPath)) {
-            $this->warn('Criando diretório relatorios...');
-            Storage::disk('public')->makeDirectory('relatorios');
+        foreach ($ultimosRelatorios as $relatorio) {
+            $totalImagens = $relatorio->imagens->count();
+            $this->line("Relatório #{$relatorio->id} - {$relatorio->titulo}");
+            $this->line("  Criado em: {$relatorio->data_criacao}");
+            $this->line("  Total de imagens: {$totalImagens}");
+            
+            if ($totalImagens > 0) {
+                foreach ($relatorio->imagens as $imagem) {
+                    $existeArquivo = Storage::disk('public')->exists($imagem->caminho_arquivo);
+                    $status = $existeArquivo ? '✓' : '✗';
+                    $this->line("    {$status} {$imagem->nome_original} - {$imagem->caminho_arquivo}");
+                }
+            }
+            $this->line('');
         }
         
-        $this->line('- Relatórios path: ' . $relatoriosPath);
-        $this->line('  Existe: ' . (is_dir($relatoriosPath) ? '✅' : '❌'));
-        $this->line('  Gravável: ' . (is_writable($relatoriosPath) ? '✅' : '❌'));
-        $this->newLine();
-
-        // 3. Verificar link simbólico
-        $this->info('🔗 Verificando link simbólico:');
-        $publicStoragePath = public_path('storage');
-        $this->line('- Public storage path: ' . $publicStoragePath);
-        $this->line('  Existe: ' . (is_link($publicStoragePath) || is_dir($publicStoragePath) ? '✅' : '❌'));
+        // Verificar permissões do diretório de storage
+        $this->info('Verificando permissões dos diretórios:');
         
-        if (!is_link($publicStoragePath) && !is_dir($publicStoragePath)) {
-            $this->warn('Link simbólico não existe. Execute: php artisan storage:link');
-        }
-        $this->newLine();
-
-        // 4. Testar criação de arquivo
-        $this->info('📝 Testando criação de arquivo:');
-        try {
-            $testFile = 'test_' . time() . '.txt';
-            $testPath = 'relatorios/' . $testFile;
-            
-            Storage::disk('public')->put($testPath, 'Teste de escrita');
-            
-            if (Storage::disk('public')->exists($testPath)) {
-                $this->line('✅ Criação de arquivo: OK');
-                Storage::disk('public')->delete($testPath);
-                $this->line('✅ Remoção de arquivo: OK');
+        $directorios = [
+            'storage/app/public',
+            'storage/app/public/relatorios',
+            'public/storage'
+        ];
+        
+        foreach ($directorios as $dir) {
+            $fullPath = base_path($dir);
+            if (is_dir($fullPath)) {
+                $permissions = substr(sprintf('%o', fileperms($fullPath)), -4);
+                $writable = is_writable($fullPath) ? '✓' : '✗';
+                $this->line("{$writable} {$dir} - Permissões: {$permissions}");
             } else {
-                $this->error('❌ Falha na criação de arquivo');
+                $this->line("✗ {$dir} - Diretório não existe");
             }
-        } catch (\Exception $e) {
-            $this->error('❌ Erro ao testar arquivo: ' . $e->getMessage());
         }
-        $this->newLine();
-
-        // 5. Verificar espaço em disco
-        $this->info('💾 Verificando espaço em disco:');
-        $freeBytes = disk_free_space(storage_path());
-        $totalBytes = disk_total_space(storage_path());
         
-        if ($freeBytes && $totalBytes) {
-            $freeGB = round($freeBytes / 1024 / 1024 / 1024, 2);
-            $totalGB = round($totalBytes / 1024 / 1024 / 1024, 2);
-            $usedPercent = round((($totalBytes - $freeBytes) / $totalBytes) * 100, 2);
-            
-            $this->line("- Espaço livre: {$freeGB} GB");
-            $this->line("- Espaço total: {$totalGB} GB");
-            $this->line("- Uso: {$usedPercent}%");
-            
-            if ($freeGB < 1) {
-                $this->warn('⚠️ Pouco espaço em disco disponível!');
-            }
+        // Verificar se o link simbólico existe
+        $this->info('Verificando link simbólico:');
+        $linkPath = public_path('storage');
+        if (is_link($linkPath)) {
+            $this->line("✓ Link simbólico existe: " . readlink($linkPath));
         } else {
-            $this->warn('Não foi possível verificar o espaço em disco');
+            $this->line("✗ Link simbólico não existe em: {$linkPath}");
+            $this->warn("Execute: php artisan storage:link");
         }
-        $this->newLine();
-
-        // 6. Verificar últimas imagens
-        $this->info('🖼️ Verificando últimas imagens:');
-        $ultimasImagens = RelatorioImagem::orderBy('data_upload', 'desc')->take(5)->get();
         
-        if ($ultimasImagens->count() > 0) {
-            foreach ($ultimasImagens as $imagem) {
-                $existe = Storage::disk('public')->exists($imagem->caminho_arquivo);
-                $status = $existe ? '✅' : '❌';
-                $tamanho = $existe ? Storage::disk('public')->size($imagem->caminho_arquivo) : 0;
-                $tamanhoMB = round($tamanho / 1024 / 1024, 2);
-                
-                $this->line("{$status} {$imagem->nome_original} ({$tamanhoMB}MB) - {$imagem->data_upload}");
-            }
-        } else {
-            $this->line('Nenhuma imagem encontrada');
-        }
-        $this->newLine();
-
-        // 7. Verificar configurações do Laravel
-        $this->info('⚙️ Verificações do Laravel:');
-        $this->line('- APP_ENV: ' . config('app.env'));
-        $this->line('- APP_DEBUG: ' . (config('app.debug') ? 'true' : 'false'));
-        $this->line('- FILESYSTEM_DISK: ' . config('filesystems.default'));
-        $this->line('- APP_URL: ' . config('app.url'));
-        $this->newLine();
-
-        // 8. Sugerir soluções
-        $this->info('💡 Possíveis soluções para problemas comuns:');
-        $this->line('1. Se upload_max_filesize for menor que 7MB:');
-        $this->line('   - Edite php.ini: upload_max_filesize = 10M');
-        $this->line('   - Edite php.ini: post_max_size = 50M');
-        $this->newLine();
-        
-        $this->line('2. Se há problemas de permissão:');
-        $this->line('   - sudo chown -R www-data:www-data storage/');
-        $this->line('   - sudo chmod -R 755 storage/');
-        $this->newLine();
-        
-        $this->line('3. Se o link simbólico não existe:');
-        $this->line('   - php artisan storage:link');
-        $this->newLine();
-        
-        $this->line('4. Para problemas de timeout:');
-        $this->line('   - Edite php.ini: max_execution_time = 300');
-        $this->line('   - Edite php.ini: memory_limit = 256M');
-        
-        $this->info('✅ Diagnóstico concluído!');
-        
-        return 0;
+        $this->info('Diagnóstico concluído!');
     }
 } 
