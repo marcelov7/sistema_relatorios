@@ -88,11 +88,11 @@ class RelatorioV2Controller extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Relatório criado com sucesso!',
-                    'redirect' => route('relatorios.show', $relatorio)
+                    'redirect' => route('relatorios-v2.show', $relatorio)
                 ]);
             }
 
-            return redirect()->route('relatorios.show', $relatorio)
+            return redirect()->route('relatorios-v2.show', $relatorio)
                            ->with('success', 'Relatório criado com sucesso!');
 
         } catch (\Exception $e) {
@@ -180,5 +180,161 @@ class RelatorioV2Controller extends Controller
         return response()->json($equipamentos);
     }
 
+    /**
+     * Exibir relatório V2 específico
+     */
+    public function show(Relatorio $relatorio)
+    {
+        // Carregar os itens do relatório
+        $itens = collect();
+        if (Schema::hasTable('relatorio_itens')) {
+            $itens = DB::table('relatorio_itens')
+                       ->join('equipamentos', 'relatorio_itens.equipamento_id', '=', 'equipamentos.id')
+                       ->where('relatorio_itens.relatorio_id', $relatorio->id)
+                       ->select(
+                           'relatorio_itens.*',
+                           'equipamentos.nome as equipamento_nome',
+                           'equipamentos.codigo as equipamento_codigo'
+                       )
+                       ->orderBy('relatorio_itens.ordem')
+                       ->get();
+        }
+
+        $relatorio->load(['usuario', 'local', 'imagens']);
+
+        return view('relatorios.show-v2', compact('relatorio', 'itens'));
+    }
+
+    /**
+     * Exibir formulário de edição V2
+     */
+    public function edit(Relatorio $relatorio)
+    {
+        // Carregar os itens do relatório
+        $itens = collect();
+        if (Schema::hasTable('relatorio_itens')) {
+            $itens = DB::table('relatorio_itens')
+                       ->where('relatorio_id', $relatorio->id)
+                       ->orderBy('ordem')
+                       ->get();
+        }
+
+        $locais = Local::orderBy('nome')->get();
+        $equipamentos = Equipamento::with('local')->orderBy('nome')->get();
+
+        return view('relatorios.edit-v2', compact('relatorio', 'itens', 'locais', 'equipamentos'));
+    }
+
+    /**
+     * Atualizar relatório V2
+     */
+    public function update(Request $request, Relatorio $relatorio)
+    {
+        try {
+            $validated = $this->validateRelatorioV2($request);
+            
+            DB::beginTransaction();
+
+            // Atualizar dados principais do relatório
+            $relatorioData = $validated;
+            unset($relatorioData['itens'], $relatorioData['imagens']);
+            
+            $relatorio->update($relatorioData);
+
+            // Remover itens existentes
+            if (Schema::hasTable('relatorio_itens')) {
+                DB::table('relatorio_itens')->where('relatorio_id', $relatorio->id)->delete();
+            }
+
+            // Recriar itens
+            if (isset($validated['itens']) && is_array($validated['itens'])) {
+                foreach ($validated['itens'] as $index => $item) {
+                    try {
+                        RelatorioItem::create([
+                            'relatorio_id' => $relatorio->id,
+                            'equipamento_id' => $item['equipamento_id'],
+                            'descricao_equipamento' => $item['descricao_equipamento'],
+                            'observacoes' => $item['observacoes'] ?? null,
+                            'status_item' => $item['status_item'] ?? 'pendente',
+                            'ordem' => $index + 1
+                        ]);
+                    } catch (\Exception $e) {
+                        DB::table('relatorio_itens')->insert([
+                            'relatorio_id' => $relatorio->id,
+                            'equipamento_id' => $item['equipamento_id'],
+                            'descricao_equipamento' => $item['descricao_equipamento'],
+                            'observacoes' => $item['observacoes'] ?? null,
+                            'status_item' => $item['status_item'] ?? 'pendente',
+                            'ordem' => $index + 1,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+                }
+            }
+
+            // Processar novas imagens se houver
+            if ($request->hasFile('imagens')) {
+                $this->processarImagens($request->file('imagens'), $relatorio);
+            }
+
+            DB::commit();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Relatório atualizado com sucesso!',
+                    'redirect' => route('relatorios-v2.show', $relatorio)
+                ]);
+            }
+
+            return redirect()->route('relatorios-v2.show', $relatorio)
+                           ->with('success', 'Relatório atualizado com sucesso!');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Erro ao atualizar relatório V2: ' . $e->getMessage());
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar relatório: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->withInput()
+                         ->withErrors(['error' => 'Erro ao atualizar relatório: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gerar PDF para relatório V2
+     */
+    public function pdf(Relatorio $relatorio)
+    {
+        // Carregar os itens do relatório
+        $itens = collect();
+        if (Schema::hasTable('relatorio_itens')) {
+            $itens = DB::table('relatorio_itens')
+                       ->join('equipamentos', 'relatorio_itens.equipamento_id', '=', 'equipamentos.id')
+                       ->where('relatorio_itens.relatorio_id', $relatorio->id)
+                       ->select(
+                           'relatorio_itens.*',
+                           'equipamentos.nome as equipamento_nome',
+                           'equipamentos.codigo as equipamento_codigo'
+                       )
+                       ->orderBy('relatorio_itens.ordem')
+                       ->get();
+        }
+
+        $relatorio->load(['usuario', 'local', 'imagens']);
+
+        $pdf = \PDF::loadView('pdf.relatorio-v2', compact('relatorio', 'itens'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'relatorio-v2-' . $relatorio->id . '-' . date('Y-m-d') . '.pdf';
+        
+        return $pdf->download($filename);
+    }
 
 }

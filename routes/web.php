@@ -89,8 +89,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('relatorios', RelatorioController::class);
     
     // Rotas V2 (versão de teste com múltiplos equipamentos)
-    Route::get('/relatorios-v2/create', [RelatorioV2Controller::class, 'create'])->name('relatorios-v2.create');
-    Route::post('/relatorios-v2', [RelatorioV2Controller::class, 'store'])->name('relatorios-v2.store');
+    Route::prefix('relatorios-v2')->name('relatorios-v2.')->group(function () {
+        Route::get('/create', [RelatorioV2Controller::class, 'create'])->name('create');
+        Route::post('/', [RelatorioV2Controller::class, 'store'])->name('store');
+        Route::get('/{relatorio}', [RelatorioV2Controller::class, 'show'])->name('show');
+        Route::get('/{relatorio}/edit', [RelatorioV2Controller::class, 'edit'])->name('edit');
+        Route::put('/{relatorio}', [RelatorioV2Controller::class, 'update'])->name('update');
+        Route::get('/{relatorio}/pdf', [RelatorioV2Controller::class, 'pdf'])->name('pdf');
+    });
     Route::get('/api/equipamentos-por-local', [RelatorioV2Controller::class, 'equipamentosPorLocal'])->name('api.equipamentos-por-local');
     
     // Ações específicas

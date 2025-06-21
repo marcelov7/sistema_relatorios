@@ -311,11 +311,17 @@
             </h2>
             <p class="text-muted mb-0 d-none d-md-block">Gerencie todos os relatórios do sistema</p>
         </div>
-        <div>
+        <div class="d-flex gap-2">
             <a href="{{ route('relatorios.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i>
                 <span class="d-none d-sm-inline">Novo Relatório</span>
                 <span class="d-sm-none">Novo</span>
+            </a>
+            <a href="{{ route('relatorios-v2.create') }}" class="btn btn-success" title="Relatório com múltiplos equipamentos">
+                <i class="bi bi-gear-wide-connected me-1"></i>
+                <span class="d-none d-lg-inline">Multi-Equipamento</span>
+                <span class="d-lg-none d-none d-md-inline">V2</span>
+                <span class="d-md-none">V2</span>
             </a>
         </div>
     </div>
