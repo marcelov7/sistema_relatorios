@@ -109,6 +109,30 @@ class Relatorio extends Model
     }
 
     /**
+     * Verifica se é um relatório V2 (múltiplos equipamentos)
+     */
+    public function isV2()
+    {
+        return $this->itens()->exists();
+    }
+
+    /**
+     * Retorna a rota correta para visualização baseada no tipo
+     */
+    public function getShowRouteAttribute()
+    {
+        return $this->isV2() ? route('relatorios-v2.show', $this) : route('relatorios.show', $this);
+    }
+
+    /**
+     * Retorna a rota correta para edição baseada no tipo
+     */
+    public function getEditRouteAttribute()
+    {
+        return $this->isV2() ? route('relatorios-v2.edit', $this) : route('relatorios.edit', $this);
+    }
+
+    /**
      * Accessors
      */
     public function getStatusBadgeAttribute()
