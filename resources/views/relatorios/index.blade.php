@@ -619,16 +619,40 @@
                                 </td>
                                 <td>
                                     <div class="d-flex justify-content-center gap-1">
-                                        <a href="{{ route('relatorios.show', $relatorio) }}" 
-                                           class="btn btn-sm btn-outline-info" title="Visualizar">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
+                                        @php
+                                            $isV2 = false;
+                                            try {
+                                                $isV2 = $relatorio->isV2();
+                                            } catch (\Exception $e) {
+                                                $isV2 = false;
+                                            }
+                                        @endphp
                                         
-                                        @if($relatorio->podeSerEditado() && ($relatorio->usuario_id == auth()->id() || hasRole(['admin', 'supervisor'])))
-                                            <a href="{{ route('relatorios.edit', $relatorio) }}" 
-                                               class="btn btn-sm btn-outline-primary" title="Editar">
-                                                <i class="bi bi-pencil"></i>
+                                        @if($isV2)
+                                            <span class="badge bg-success small me-1" title="Relatório V2 - Múltiplos Equipamentos">V2</span>
+                                            <a href="{{ route('relatorios-v2.show', $relatorio) }}" 
+                                               class="btn btn-sm btn-outline-info" title="Visualizar V2">
+                                                <i class="bi bi-eye"></i>
                                             </a>
+                                            
+                                            @if($relatorio->podeSerEditado() && ($relatorio->usuario_id == auth()->id() || hasRole(['admin', 'supervisor'])))
+                                                <a href="{{ route('relatorios-v2.edit', $relatorio) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Editar V2">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @endif
+                                        @else
+                                            <a href="{{ route('relatorios.show', $relatorio) }}" 
+                                               class="btn btn-sm btn-outline-info" title="Visualizar">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            
+                                            @if($relatorio->podeSerEditado() && ($relatorio->usuario_id == auth()->id() || hasRole(['admin', 'supervisor'])))
+                                                <a href="{{ route('relatorios.edit', $relatorio) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -696,16 +720,40 @@
                     </div>
                     
                     <div class="d-flex gap-2 mt-3">
-                        <a href="{{ route('relatorios.show', $relatorio) }}" 
-                           class="btn btn-outline-info btn-sm flex-grow-1">
-                            <i class="bi bi-eye me-1"></i>Ver
-                        </a>
+                        @php
+                            $isV2Mobile = false;
+                            try {
+                                $isV2Mobile = $relatorio->isV2();
+                            } catch (\Exception $e) {
+                                $isV2Mobile = false;
+                            }
+                        @endphp
                         
-                        @if($relatorio->podeSerEditado() && ($relatorio->usuario_id == auth()->id() || hasRole(['admin', 'supervisor'])))
-                            <a href="{{ route('relatorios.edit', $relatorio) }}" 
-                               class="btn btn-outline-primary btn-sm flex-grow-1">
-                                <i class="bi bi-pencil me-1"></i>Editar
+                        @if($isV2Mobile)
+                            <span class="badge bg-success align-self-start" title="Relatório V2">V2</span>
+                            <a href="{{ route('relatorios-v2.show', $relatorio) }}" 
+                               class="btn btn-outline-info btn-sm flex-grow-1">
+                                <i class="bi bi-eye me-1"></i>Ver V2
                             </a>
+                            
+                            @if($relatorio->podeSerEditado() && ($relatorio->usuario_id == auth()->id() || hasRole(['admin', 'supervisor'])))
+                                <a href="{{ route('relatorios-v2.edit', $relatorio) }}" 
+                                   class="btn btn-outline-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-pencil me-1"></i>Editar V2
+                                </a>
+                            @endif
+                        @else
+                            <a href="{{ route('relatorios.show', $relatorio) }}" 
+                               class="btn btn-outline-info btn-sm flex-grow-1">
+                                <i class="bi bi-eye me-1"></i>Ver
+                            </a>
+                            
+                            @if($relatorio->podeSerEditado() && ($relatorio->usuario_id == auth()->id() || hasRole(['admin', 'supervisor'])))
+                                <a href="{{ route('relatorios.edit', $relatorio) }}" 
+                                   class="btn btn-outline-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-pencil me-1"></i>Editar
+                                </a>
+                            @endif
                         @endif
                     </div>
                 </div>

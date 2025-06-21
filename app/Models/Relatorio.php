@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Relatorio extends Model
 {
@@ -113,7 +115,19 @@ class Relatorio extends Model
      */
     public function isV2()
     {
-        return $this->itens()->exists();
+        try {
+            // Verifica se a tabela existe antes de fazer a consulta
+            if (!Schema::hasTable('relatorio_itens')) {
+                return false;
+            }
+            
+            return DB::table('relatorio_itens')
+                     ->where('relatorio_id', $this->id)
+                     ->exists();
+        } catch (\Exception $e) {
+            \Log::error('Erro ao verificar se é relatório V2: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**

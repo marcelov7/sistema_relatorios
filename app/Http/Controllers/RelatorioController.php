@@ -213,11 +213,6 @@ class RelatorioController extends Controller
      */
     public function show(Relatorio $relatorio)
     {
-        // Se for um relatório V2, redirecionar para a view V2
-        if ($relatorio->isV2()) {
-            return redirect()->route('relatorios-v2.show', $relatorio);
-        }
-
         $relatorio->load('usuario', 'imagens', 'local', 'equipamento', 'historicos.usuario', 'historicos.imagens');
         
         return view('relatorios.show', compact('relatorio'));
@@ -228,11 +223,6 @@ class RelatorioController extends Controller
      */
     public function edit(Relatorio $relatorio)
     {
-        // Se for um relatório V2, redirecionar para a edição V2
-        if ($relatorio->isV2()) {
-            return redirect()->route('relatorios-v2.edit', $relatorio);
-        }
-
         // Verifica se pode editar
         if (!$relatorio->podeSerEditado()) {
             return redirect()
