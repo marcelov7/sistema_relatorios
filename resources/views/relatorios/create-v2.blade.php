@@ -4,6 +4,10 @@
 
 @push('styles')
 <style>
+    [x-cloak] { 
+        display: none !important; 
+    }
+    
     .form-card {
         border: none;
         border-radius: 1rem;
@@ -219,7 +223,7 @@
 @endpush
 
 @section('content')
-<div class="container" x-data="relatorioFormV2()">
+<div class="container" x-data="relatorioFormV2()" x-cloak>
     
     <!-- Header -->
     <div class="mb-3 mb-md-4">
@@ -633,6 +637,11 @@
 
 @push('scripts')
 <script>
+// Aguardar Alpine.js ser carregado
+document.addEventListener('alpine:init', () => {
+    console.log('Alpine.js foi inicializado!');
+});
+
 function relatorioFormV2() {
     return {
         // Estado do formulário
@@ -658,14 +667,20 @@ function relatorioFormV2() {
         errors: {},
         
         init() {
-            // Inicializar com um equipamento vazio
-            this.addEquipment();
+            console.log('Inicializando componente Alpine...');
+            
+            // Garantir que isSubmitting inicia como false
+            this.isSubmitting = false;
             
             // Carregar draft se existir
             this.loadDraft();
             
-            // Fix: Garantir que isSubmitting inicia como false
-            this.isSubmitting = false;
+            // Inicializar com um equipamento vazio se não houver nenhum
+            if (this.formData.itens.length === 0) {
+                this.addEquipment();
+            }
+            
+            console.log('Componente inicializado com sucesso!');
         },
         
         // Computed: equipamentos filtrados pelo local
