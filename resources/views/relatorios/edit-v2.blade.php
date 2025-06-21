@@ -383,14 +383,14 @@ function relatorioEditV2() {
             prioridade: '{{ $relatorio->prioridade }}',
             progresso: {{ $relatorio->progresso }},
             local_id: '{{ $relatorio->local_id }}',
-            itens: @json($itens->map(function($item) {
+            itens: @json($itens->isEmpty() ? [] : $itens->map(function($item) {
                 return [
                     'equipamento_id' => $item->equipamento_id,
                     'descricao_equipamento' => $item->descricao_equipamento,
-                    'observacoes' => $item->observacoes,
-                    'status_item' => $item->status_item
+                    'observacoes' => $item->observacoes ?? '',
+                    'status_item' => $item->status_item ?? 'pendente'
                 ];
-            }))
+            })->toArray())
         },
         
         // Equipamentos
