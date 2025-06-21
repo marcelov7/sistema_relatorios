@@ -241,19 +241,38 @@ class RelatorioV2Controller extends Controller
      */
     public function edit(Relatorio $relatorio)
     {
-        // Carregar os itens do relatório
-        $itens = collect();
-        if (Schema::hasTable('relatorio_itens')) {
-            $itens = DB::table('relatorio_itens')
-                       ->where('relatorio_id', $relatorio->id)
-                       ->orderBy('ordem')
-                       ->get();
+        try {
+            \Log::info('Iniciando edição V2 para relatório: ' . $relatorio->id);
+            
+            // Carregar os itens do relatório
+            $itens = collect();
+            if (Schema::hasTable('relatorio_itens')) {
+                \Log::info('Tabela relatorio_itens existe, carregando itens...');
+                $itens = DB::table('relatorio_itens')
+                           ->where('relatorio_id', $relatorio->id)
+                           ->orderBy('ordem')
+                           ->get();
+                \Log::info('Itens carregados: ' . $itens->count());
+            } else {
+                \Log::warning('Tabela relatorio_itens não existe');
+            }
+
+            \Log::info('Carregando locais...');
+            $locais = Local::orderBy('nome')->get();
+            \Log::info('Locais carregados: ' . $locais->count());
+
+            \Log::info('Carregando equipamentos...');
+            $equipamentos = Equipamento::with('local')->orderBy('nome')->get();
+            \Log::info('Equipamentos carregados: ' . $equipamentos->count());
+
+            \Log::info('Retornando view edit-v2...');
+            return view('relatorios.edit-v2', compact('relatorio', 'itens', 'locais', 'equipamentos'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro no método edit V2: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
         }
-
-        $locais = Local::orderBy('nome')->get();
-        $equipamentos = Equipamento::with('local')->orderBy('nome')->get();
-
-        return view('relatorios.edit-v2', compact('relatorio', 'itens', 'locais', 'equipamentos'));
     }
 
     /**
