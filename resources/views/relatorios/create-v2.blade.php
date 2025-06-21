@@ -663,6 +663,9 @@ function relatorioFormV2() {
             
             // Carregar draft se existir
             this.loadDraft();
+            
+            // Fix: Garantir que isSubmitting inicia como false
+            this.isSubmitting = false;
         },
         
         // Computed: equipamentos filtrados pelo local
@@ -694,16 +697,7 @@ function relatorioFormV2() {
             return !item.equipamento_id || !item.descricao_equipamento.trim();
         },
         
-        // Gerenciar equipamentos
-        addEquipment() {
-            this.formData.itens.push({
-                equipamento_id: '',
-                descricao_equipamento: '',
-                observacoes: '',
-                status_item: 'pendente'
-            });
-            this.saveDraft();
-        },
+
         
         removeEquipment(index) {
             this.formData.itens.splice(index, 1);
@@ -716,6 +710,19 @@ function relatorioFormV2() {
             this.formData.itens.forEach(item => {
                 item.equipamento_id = '';
             });
+            this.saveDraft();
+        },
+        
+        // Debug: Adicionar logs
+        addEquipment() {
+            console.log('Adicionando equipamento...');
+            this.formData.itens.push({
+                equipamento_id: '',
+                descricao_equipamento: '',
+                observacoes: '',
+                status_item: 'pendente'
+            });
+            console.log('Total de itens:', this.formData.itens.length);
             this.saveDraft();
         },
         
