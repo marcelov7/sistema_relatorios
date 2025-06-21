@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\RelatorioController;
+use App\Http\Controllers\RelatorioV2Controller;
 use App\Http\Controllers\LocalController;
 use App\Http\Controllers\EquipamentoController;
 use App\Http\Controllers\AnalisadorController;
@@ -86,6 +87,11 @@ Route::middleware('auth')->group(function () {
     
     // CRUD de relatórios
     Route::resource('relatorios', RelatorioController::class);
+    
+    // Rotas V2 (versão de teste com múltiplos equipamentos)
+    Route::get('/relatorios-v2/create', [RelatorioV2Controller::class, 'create'])->name('relatorios-v2.create');
+    Route::post('/relatorios-v2', [RelatorioV2Controller::class, 'store'])->name('relatorios-v2.store');
+    Route::get('/api/equipamentos-por-local', [RelatorioV2Controller::class, 'equipamentosPorLocal'])->name('api.equipamentos-por-local');
     
     // Ações específicas
     Route::patch('/relatorios/{relatorio}/progresso', [RelatorioController::class, 'updateProgresso'])->name('relatorios.update-progresso');
