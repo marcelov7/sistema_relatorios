@@ -378,7 +378,7 @@ function relatorioEditV2() {
         formData: {
             titulo: '{{ $relatorio->titulo }}',
             descricao: '{{ addslashes($relatorio->descricao) }}',
-            data_ocorrencia: '{{ $relatorio->data_ocorrencia->format('Y-m-d') }}',
+            data_ocorrencia: '{{ $relatorio->data_ocorrencia ? $relatorio->data_ocorrencia->format('Y-m-d') : '' }}',
             status: '{{ $relatorio->status }}',
             prioridade: '{{ $relatorio->prioridade }}',
             progresso: {{ $relatorio->progresso }},
