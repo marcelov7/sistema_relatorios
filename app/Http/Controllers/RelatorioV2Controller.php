@@ -267,11 +267,16 @@ class RelatorioV2Controller extends Controller
 
             \Log::info('Retornando view edit-v2...');
             
-            // Teste simples para ver se o problema está na view
+            // Teste simples para identificar o problema
             try {
-                $data = compact('relatorio', 'itens', 'locais', 'equipamentos');
                 \Log::info('Dados preparados para view: relatorio_id=' . $relatorio->id . ', itens_count=' . $itens->count() . ', locais_count=' . $locais->count() . ', equipamentos_count=' . $equipamentos->count());
-                return view('relatorios.edit-v2', $data);
+                
+                // Teste: retornar apenas texto simples primeiro
+                return response('<h1>Teste Edit V2 - Relatório ID: ' . $relatorio->id . '</h1><p>Itens: ' . $itens->count() . '</p><p>Locais: ' . $locais->count() . '</p><p>Equipamentos: ' . $equipamentos->count() . '</p>');
+                
+                // Se chegou aqui, o problema não é no controller
+                // return view('relatorios.edit-v2', compact('relatorio', 'itens', 'locais', 'equipamentos'));
+                
             } catch (\Exception $viewException) {
                 \Log::error('Erro ao renderizar view edit-v2: ' . $viewException->getMessage());
                 throw $viewException;
