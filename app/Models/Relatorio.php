@@ -38,6 +38,8 @@ class Relatorio extends Model
 
     protected $casts = [
         'data_ocorrencia' => 'datetime',
+        'data_criacao' => 'datetime',
+        'data_atualizacao' => 'datetime',
         'progresso' => 'integer',
         'editavel' => 'boolean',
         'tenant_id' => 'integer'

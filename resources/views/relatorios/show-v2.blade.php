@@ -187,7 +187,9 @@
                         <label class="form-label fw-bold">
                             <i class="bi bi-calendar-date me-2 text-success"></i>Data da Ocorrência:
                         </label>
-                        <p class="mb-0">{{ $relatorio->data_ocorrencia->format('d/m/Y') }}</p>
+                        <p class="mb-0">
+                            {{ $relatorio->data_ocorrencia ? $relatorio->data_ocorrencia->format('d/m/Y') : 'N/A' }}
+                        </p>
                     </div>
 
                     <div class="mb-3">
@@ -220,7 +222,9 @@
                             <i class="bi bi-person me-2 text-success"></i>Criado por:
                         </label>
                         <p class="mb-0">{{ $relatorio->usuario->name ?? 'N/A' }}</p>
-                        <small class="text-muted">{{ $relatorio->created_at->format('d/m/Y H:i') }}</small>
+                        <small class="text-muted">
+                            {{ $relatorio->data_criacao ? $relatorio->data_criacao->format('d/m/Y H:i') : 'N/A' }}
+                        </small>
                     </div>
                 </div>
             </div>
