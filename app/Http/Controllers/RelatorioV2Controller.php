@@ -148,17 +148,48 @@ class RelatorioV2Controller extends Controller
     private function processarImagens($imagens, $relatorio)
     {
         foreach ($imagens as $imagem) {
-            $nomeArquivo = time() . '_' . uniqid() . '.' . $imagem->getClientOriginalExtension();
-            $caminho = $imagem->storeAs('relatorios', $nomeArquivo, 'public');
+            try {
+                // Validações básicas
+                if (!$imagem->isValid()) {
+                    throw new \Exception("Arquivo de imagem inválido: {$imagem->getClientOriginalName()}");
+                }
 
-            RelatorioImagem::create([
-                'relatorio_id' => $relatorio->id,
-                'nome_original' => $imagem->getClientOriginalName(),
-                'nome_arquivo' => $nomeArquivo,
-                'caminho' => $caminho,
-                'tamanho' => $imagem->getSize(),
-                'tipo' => $imagem->getMimeType()
-            ]);
+                $nomeOriginal = $imagem->getClientOriginalName();
+                $extensao = $imagem->getClientOriginalExtension();
+                $nomeArquivo = time() . '_' . uniqid() . '.' . $extensao;
+                $diretorioRelatorio = 'relatorios/' . $relatorio->id;
+
+                // Salvar arquivo
+                $caminho = $imagem->storeAs($diretorioRelatorio, $nomeArquivo, 'public');
+                
+                if (!$caminho) {
+                    throw new \Exception("Falha ao salvar o arquivo no storage");
+                }
+
+                // Salvar no banco usando os campos corretos da tabela relatorio_imagens
+                RelatorioImagem::create([
+                    'relatorio_id' => $relatorio->id,
+                    'nome_original' => $nomeOriginal,
+                    'nome_arquivo' => $nomeArquivo,
+                    'caminho_arquivo' => $caminho,  // Campo correto
+                    'tamanho_arquivo' => $imagem->getSize(),  // Campo correto
+                    'tipo_mime' => $imagem->getMimeType(),  // Campo correto
+                    'tenant_id' => 1
+                ]);
+
+                \Log::info("Imagem V2 processada com sucesso", [
+                    'nome_original' => $nomeOriginal,
+                    'caminho' => $caminho,
+                    'relatorio_id' => $relatorio->id
+                ]);
+
+            } catch (\Exception $e) {
+                \Log::error("Erro ao processar imagem V2: " . $e->getMessage(), [
+                    'nome_arquivo' => $imagem->getClientOriginalName() ?? 'unknown',
+                    'relatorio_id' => $relatorio->id
+                ]);
+                throw $e;
+            }
         }
     }
 

@@ -296,12 +296,12 @@
                         <div class="image-gallery">
                             @foreach($relatorio->imagens as $imagem)
                                 <div class="image-item">
-                                    <img src="{{ Storage::url($imagem->caminho) }}" 
+                                    <img src="{{ Storage::url($imagem->caminho_arquivo) }}" 
                                          alt="{{ $imagem->nome_original }}"
                                          class="img-fluid"
                                          data-bs-toggle="modal" 
                                          data-bs-target="#imageModal"
-                                         onclick="showImage('{{ Storage::url($imagem->caminho) }}', '{{ $imagem->nome_original }}')">
+                                         onclick="showImage('{{ Storage::url($imagem->caminho_arquivo) }}', '{{ $imagem->nome_original }}')">
                                     <div class="text-center mt-2">
                                         <small class="text-muted">{{ $imagem->nome_original }}</small>
                                     </div>

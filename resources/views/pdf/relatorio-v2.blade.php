@@ -429,7 +429,7 @@
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                         @foreach($relatorio->imagens as $imagem)
                             <div style="text-align: center;">
-                                <img src="{{ public_path('storage/' . $imagem->caminho) }}" 
+                                <img src="{{ public_path('storage/' . $imagem->caminho_arquivo) }}" 
                                      alt="{{ $imagem->nome_original }}"
                                      style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid #dee2e6;">
                                 <div style="margin-top: 5px; font-size: 9px; color: #6c757d;">
