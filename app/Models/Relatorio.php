@@ -103,11 +103,10 @@ class Relatorio extends Model
         return $this->hasMany(RelatorioHistorico::class, 'relatorio_id')->orderBy('data_atualizacao', 'desc');
     }
 
-    // Relacionamento com itens - temporariamente desabilitado
-    // public function itens()
-    // {
-    //     return $this->hasMany(RelatorioItem::class, 'relatorio_id')->ordenado();
-    // }
+    public function itens()
+    {
+        return $this->hasMany(RelatorioItem::class, 'relatorio_id')->ordenado();
+    }
 
     /**
      * Accessors

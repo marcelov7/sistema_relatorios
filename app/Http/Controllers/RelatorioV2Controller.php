@@ -50,14 +50,29 @@ class RelatorioV2Controller extends Controller
             // Criar itens do relatório (equipamentos + descrições)
             if (isset($validated['itens']) && is_array($validated['itens'])) {
                 foreach ($validated['itens'] as $index => $item) {
-                    RelatorioItem::create([
-                        'relatorio_id' => $relatorio->id,
-                        'equipamento_id' => $item['equipamento_id'],
-                        'descricao_equipamento' => $item['descricao_equipamento'],
-                        'observacoes' => $item['observacoes'] ?? null,
-                        'status_item' => $item['status_item'] ?? 'pendente',
-                        'ordem' => $index + 1
-                    ]);
+                    try {
+                        // Tentar usar a model primeiro
+                        RelatorioItem::create([
+                            'relatorio_id' => $relatorio->id,
+                            'equipamento_id' => $item['equipamento_id'],
+                            'descricao_equipamento' => $item['descricao_equipamento'],
+                            'observacoes' => $item['observacoes'] ?? null,
+                            'status_item' => $item['status_item'] ?? 'pendente',
+                            'ordem' => $index + 1
+                        ]);
+                    } catch (\Exception $e) {
+                        // Se falhar, usar DB::table diretamente
+                        DB::table('relatorio_itens')->insert([
+                            'relatorio_id' => $relatorio->id,
+                            'equipamento_id' => $item['equipamento_id'],
+                            'descricao_equipamento' => $item['descricao_equipamento'],
+                            'observacoes' => $item['observacoes'] ?? null,
+                            'status_item' => $item['status_item'] ?? 'pendente',
+                            'ordem' => $index + 1,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
                 }
             }
 
